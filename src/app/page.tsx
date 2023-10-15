@@ -22,6 +22,7 @@ function Page() {
   return (
     <>
       <ConnectKitButton />
+      {/* <NetworkSwitcher /> */}
 
       <Connected>
         <Game/>
