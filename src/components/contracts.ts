@@ -1,4 +1,11 @@
 import { erc20ABI } from 'wagmi'
+import tictactoeAddress from  './address.json'
+import tictactoeAbi from './abi.json'
+
+export const tictactoeConfig = {
+  address: "0x3D4cFe8493c0a08EDA977CCF50A648151228aF69",
+  abi: tictactoeAbi
+} as const
 
 export const wagmiContractConfig = {
   address: '0xFBA3912Ca04dd458c843e2EE08967fC04f3579c2',

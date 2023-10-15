@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "connectkit": "^1.4.0",
+    "lokijs": "^1.5.12",
     "next": "^13.4.0",
+    "node-fetch": "^3.3.2",
+    "pino-pretty": "^10.2.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "viem": "~0.3.36",
