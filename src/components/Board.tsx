@@ -177,7 +177,7 @@ export default function Game() {
           }
         }`,
       variables: {
-        id: "be6b65c3-3c69-4b47-bece-ec76d4a7b15d",
+        id: "87caa5be-dc32-4259-9117-eeafb5961781",
         input: null
       }
     }));
