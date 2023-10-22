@@ -46,3 +46,5 @@ yarn-error.log*
 next-env.d.ts
 
 tic_tac_toe_games.json
+tic_tac_toe_games_good.json
+tic_tac_toe_games_bad.json

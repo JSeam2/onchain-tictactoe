@@ -146,126 +146,151 @@ export default function Game() {
     let result = saveGameState();
     console.log(saveGameState);
 
-    const lastHistory = result.history[result.history.length - 1];
-    const mappedData = lastHistory.map((val: any) => {
-        if (val === "X") return 0.0;
-        if (val === "O") return 1.0;
-        return 2.0;
-    });
+    const history = result.history;
+    const flattenedHistory = history.reduce((acc: any, val: any) => {
+      let item = val.map((x: any) => {
+          if (x === "X") return "0.0";
+          if (x === "O") return "1.0";
+          return "2.0";
+      });
+      return acc.concat(item);
+    }, []);
 
-    let jsonToSubmit = {
-        input_data: [mappedData]
-    };
+    while (flattenedHistory.length < 90) {
+      flattenedHistory.push("2.0");
+    }
 
-    console.log(jsonToSubmit);
+    let outcome;
+    if (result.outcome == "X") {
+      outcome = "0.0";
+    }
+    else if (result.outcome == "O") {
+      outcome = "1.0";
+    }
+    else {
+      outcome = "2.0";
+    }
 
-    const jsonBlob = new Blob([JSON.stringify(jsonToSubmit)], {type: 'application/json'});
+  // Append outcome to the flattened history
+  flattenedHistory.push(outcome);
+
+  let jsonToSubmit = {
+      input_data: [flattenedHistory]
+  };
+
+  let jsonString = JSON.stringify(jsonToSubmit);
+
+  jsonString = jsonString.replace(/"(\d+\.\d+)"/g, '$1');
+
+  console.log(jsonString);
+
+  const jsonBlob = new Blob([jsonString], {type: 'application/json'});
+
+  // Convert Blob to File
+  const jsonFile = new File([jsonBlob], "data.json", {type: 'application/json'});
+
+  let form = new FormData();
+
+  // Stringify the operations and map
+  form.append("operations", JSON.stringify({
+    query: `
+      mutation($id: String!, $input: Upload!) {
+        initiateProof(id: $id, input: $input) {
+          id
+          status
+        }
+      }`,
+    variables: {
+      id: "e74adc51-570c-4be7-83be-1d255fb7945d",
+      input: null
+    }
+  }));
+
+  form.append("map", JSON.stringify({
+    "input": ["variables.input"]
+  }));
+
+  form.append("input", jsonFile);
+
+  const options = {
+    method: 'POST',
+    // headers: {'Content-Type': 'multipart/form-data; boundary=---011000010111000001101001'},
+    body: form
+  };
+
+  options.body = form;
 
 
-    // Convert Blob to File
-    const jsonFile = new File([jsonBlob], "data.json", {type: 'application/json'});
 
-    let form = new FormData();
-
-    // Stringify the operations and map
-    form.append("operations", JSON.stringify({
-      query: `
-        mutation($id: String!, $input: Upload!) {
-          initiateProof(id: $id, input: $input) {
-            id
-            status
-          }
-        }`,
-      variables: {
-        id: "be6b65c3-3c69-4b47-bece-ec76d4a7b15d",
-        input: null
+  fetch('https://hub-staging.ezkl.xyz/graphql', options)
+    .then(response => response.json())
+    .then(response => {
+      console.log(response);
+      // get data
+        // Ensure the response has the expected structure
+      if (response.data && response.data.initiateProof && response.data.initiateProof.id) {
+        const id = response.data.initiateProof.id;
+        // Poll the getProof endpoint periodically with initial count 0
+        pollGetProof(id, 0);
+      } else {
+        console.warn("Unexpected mutation response structure:", response);
       }
-    }));
+    })
+    .catch(err => console.error(err));
+  }
 
-    form.append("map", JSON.stringify({
-      "input": ["variables.input"]
-    }));
 
-    form.append("input", jsonFile);
+  const pollGetProof = (taskId: string, attemptCount: number) => {
+    if (attemptCount >= MAX_POLL_ATTEMPTS) {
+      alert("Timeout")
+      throw new Error("Timeout: Exceeded maximum number of polling attempts.");
+    }
 
-    const options = {
+    const getProofOptions = {
       method: 'POST',
-      // headers: {'Content-Type': 'multipart/form-data; boundary=---011000010111000001101001'},
-      body: form
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        query: `
+          query($taskId: String!) {
+            getProof(id: $taskId) {
+              proof
+              instances
+              strategy
+              transcriptType
+              status
+            }
+          }`,
+        variables: {
+          taskId: taskId
+        }
+      })
     };
 
-    options.body = form;
-
-
-
-    fetch('https://hub-staging.ezkl.xyz/graphql', options)
+    fetch('https://hub-staging.ezkl.xyz/graphql', getProofOptions)
       .then(response => response.json())
       .then(response => {
         console.log(response);
-        // get data
-          // Ensure the response has the expected structure
-        if (response.data && response.data.initiateProof && response.data.initiateProof.id) {
-          const id = response.data.initiateProof.id;
-          // Poll the getProof endpoint periodically with initial count 0
-          pollGetProof(id, 0);
+
+        if (response.errors) {
+          console.error("GraphQL Errors:", response.errors);
+          return;
         } else {
-          console.warn("Unexpected mutation response structure:", response);
+          if (response.data && response.data.getProof && response.data.getProof.proof && response.data.getProof.instances) {
+            write({
+              args: [response.data.getProof.proof, response.data.getProof.instances],
+            })
+            return;
+          }
+        }
+
+        // Check if you've received the desired result (you can modify this condition)
+        if (!response.data.getProof) {
+          // If not received, wait for a bit (e.g., 5 seconds) and poll again
+          setTimeout(() => pollGetProof(taskId, attemptCount + 1), 5000);
         }
       })
       .catch(err => console.error(err));
   }
-
-
-const pollGetProof = (taskId: string, attemptCount: number) => {
-  if (attemptCount >= MAX_POLL_ATTEMPTS) {
-    throw new Error("Timeout: Exceeded maximum number of polling attempts.");
-  }
-
-  const getProofOptions = {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      query: `
-        query($taskId: String!) {
-          getProof(id: $taskId) {
-            proof
-            instances
-            strategy
-            transcriptType
-            status
-          }
-        }`,
-      variables: {
-        taskId: taskId
-      }
-    })
-  };
-
-  fetch('https://hub-staging.ezkl.xyz/graphql', getProofOptions)
-    .then(response => response.json())
-    .then(response => {
-      console.log(response);
-
-      if (response.errors) {
-        console.error("GraphQL Errors:", response.errors);
-        return;
-      } else {
-        if (response.data && response.data.getProof && response.data.getProof.proof && response.data.getProof.instances) {
-          write({
-            args: [response.data.getProof.proof, response.data.getProof.instances],
-          })
-          return;
-        }
-      }
-
-      // Check if you've received the desired result (you can modify this condition)
-      if (!response.data.getProof) {
-        // If not received, wait for a bit (e.g., 5 seconds) and poll again
-        setTimeout(() => pollGetProof(taskId, attemptCount + 1), 5000);
-      }
-    })
-    .catch(err => console.error(err));
-}
 
 
   const moves = history.map((squares, move) => {
