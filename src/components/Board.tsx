@@ -146,15 +146,49 @@ export default function Game() {
     let result = saveGameState();
     console.log(saveGameState);
 
-    const lastHistory = result.history[result.history.length - 1];
-    const mappedData = lastHistory.map((val: any) => {
-        if (val === "X") return 0.0;
-        if (val === "O") return 1.0;
-        return 2.0;
-    });
+    let parseData: any = [];
+
+    for (var i = 0; i < result.history.length; i++) {
+      var el = result.history[i];
+      for (var j = 0; j < el.length; j++) {
+        if (el[j] === "X") {
+          parseData.push(0.0);
+        } else if (el[j] === "O") {
+          parseData.push(1.0);
+        } else {
+          parseData.push(2.0);
+        }
+      }
+    }
+
+    for (var i = 0; i < 10 - result.history.length; i++) {
+      let dataToPush = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0];
+      parseData.push(...dataToPush);
+    }
+
+    if (winner === "X") {
+      let dataToPush = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+      parseData.push(...dataToPush);
+    }
+    else if (winner === "O") {
+      let dataToPush = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+      parseData.push(...dataToPush);
+    } else {
+      let dataToPush = [2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+      parseData.push(...dataToPush);
+    }
+
+    // console.log(parseData);
+
+    // const lastHistory = result.history[result.history.length - 1];
+    // const mappedData = lastHistory.map((val: any) => {
+    //     if (val === "X") return 0.0;
+    //     if (val === "O") return 1.0;
+    //     return 2.0;
+    // });
 
     let jsonToSubmit = {
-        input_data: [mappedData]
+        input_data: [parseData]
     };
 
     console.log(jsonToSubmit);
@@ -177,7 +211,7 @@ export default function Game() {
           }
         }`,
       variables: {
-        id: "87caa5be-dc32-4259-9117-eeafb5961781",
+        id: "77f8aabd-aa9a-482d-b6fb-11ea35513ee5",
         input: null
       }
     }));
@@ -218,6 +252,7 @@ export default function Game() {
 
 const pollGetProof = (taskId: string, attemptCount: number) => {
   if (attemptCount >= MAX_POLL_ATTEMPTS) {
+    alert("Proof Failed");
     throw new Error("Timeout: Exceeded maximum number of polling attempts.");
   }
 

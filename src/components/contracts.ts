@@ -3,7 +3,7 @@ import tictactoeAddress from  './address.json'
 import tictactoeAbi from './abi.json'
 
 export const tictactoeConfig = {
-  address: "0x3D4cFe8493c0a08EDA977CCF50A648151228aF69",
+  address: "0xd44d5f286048D5bE9E30C0067be86B0530dE8528",
   abi: tictactoeAbi
 } as const
 
