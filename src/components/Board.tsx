@@ -285,7 +285,7 @@ export default function Game() {
 
 
 const pollGetProof = (taskId: string, attemptCount: number) => {
-  alert("Submitting game to generate prove")
+  alert("Proving the game")
   if (attemptCount >= MAX_POLL_ATTEMPTS) {
     alert("Proof Failed");
     throw new Error("Timeout: Exceeded maximum number of polling attempts.");
