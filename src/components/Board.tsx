@@ -146,29 +146,69 @@ export default function Game() {
       var el = result.history[i];
       for (var j = 0; j < el.length; j++) {
         if (el[j] === "X") {
-          parseData.push(0.0);
+          parseData.push(1, 0, 0);
         } else if (el[j] === "O") {
-          parseData.push(1.0);
+          parseData.push(0, 1, 0);
         } else {
-          parseData.push(2.0);
+          parseData.push(0, 0, 1);
         }
       }
     }
 
     for (var i = 0; i < 10 - result.history.length; i++) {
-      let dataToPush = [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0];
+      let dataToPush = [
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+      ];
       parseData.push(...dataToPush);
     }
 
     if (winner === "X") {
-      let dataToPush = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+      let dataToPush = [
+        1, 0 ,0,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+      ];
       parseData.push(...dataToPush);
     }
     else if (winner === "O") {
-      let dataToPush = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+      let dataToPush = [
+        0, 1 ,0,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+      ];
       parseData.push(...dataToPush);
     } else {
-      let dataToPush = [2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+      let dataToPush = [
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+        0, 0 ,1,
+      ];
       parseData.push(...dataToPush);
     }
 
@@ -205,7 +245,7 @@ export default function Game() {
           }
         }`,
       variables: {
-        id: "77f8aabd-aa9a-482d-b6fb-11ea35513ee5",
+        id: "cca7f9e4-a039-4cf1-9181-a9c5c34b5970",
         input: null
       }
     }));
