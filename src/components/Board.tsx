@@ -300,8 +300,6 @@ const pollGetProof = (taskId: string, attemptCount: number) => {
           getProof(id: $taskId) {
             proof
             instances
-            strategy
-            transcriptType
             status
           }
         }`,
