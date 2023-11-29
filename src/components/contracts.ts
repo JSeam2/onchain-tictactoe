@@ -1,8 +1,13 @@
 import { erc20ABI } from 'wagmi'
 import tictactoeAbi from './abi.json'
 
-export const tictactoeConfig = {
+export const tictactoeConfigPolygon = {
   address: "0x82Ab8fb58672204536bd733721AAd887831fb505",
+  abi: tictactoeAbi
+} as const
+
+export const tictactoeConfigOptimism = {
+  address: "0x7495DEF017573E109610688099b9dC6806004fd4",
   abi: tictactoeAbi
 } as const
 

@@ -1,9 +1,9 @@
 'use client'
 import { useState } from 'react';
 import { BaseError } from 'viem'
-import { useContractWrite, useWaitForTransaction } from 'wagmi'
+import { useNetwork, useContractWrite, useWaitForTransaction } from 'wagmi'
 
-import { tictactoeConfig } from './contracts'
+import { tictactoeConfigPolygon, tictactoeConfigOptimism } from './contracts'
 import { stringify } from '../utils/stringify'
 
 
@@ -82,10 +82,18 @@ export default function Game() {
   const currentSquares = history[currentMove];
   const winner = calculateWinner(currentSquares);
   const isGameCompleted = winner || history.length === 10;
-  const { write, data, error, isLoading, isError } = useContractWrite({
-    ...tictactoeConfig,
-    functionName: 'mint',
-  })
+  const { chain, chains } = useNetwork()
+
+  const { write, data, error, isLoading, isError } = useContractWrite(
+    chain?.name === "polygon" ? {
+      ...tictactoeConfigPolygon,
+      functionName: 'mint',
+    } : {
+      ...tictactoeConfigOptimism,
+      functionName: 'mint',
+    }
+  )
+
   const {
     data: receipt,
     isLoading: isPending,
@@ -258,7 +266,6 @@ export default function Game() {
 
     const options = {
       method: 'POST',
-      // headers: {'Content-Type': 'multipart/form-data; boundary=---011000010111000001101001'},
       body: form
     };
 
@@ -284,56 +291,56 @@ export default function Game() {
   }
 
 
-const pollGetProof = (taskId: string, attemptCount: number) => {
-  alert("Proving the game")
-  if (attemptCount >= MAX_POLL_ATTEMPTS) {
-    alert("Proof Failed");
-    throw new Error("Timeout: Exceeded maximum number of polling attempts.");
-  }
+  const pollGetProof = (taskId: string, attemptCount: number) => {
+    alert("Proving the game")
+    if (attemptCount >= MAX_POLL_ATTEMPTS) {
+      alert("Proof Failed");
+      throw new Error("Timeout: Exceeded maximum number of polling attempts.");
+    }
 
-  const getProofOptions = {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      query: `
-        query($taskId: String!) {
-          getProof(id: $taskId) {
-            proof
-            instances
-            status
-          }
-        }`,
-      variables: {
-        taskId: taskId
-      }
-    })
-  };
-
-  fetch('https://hub-staging.ezkl.xyz/graphql', getProofOptions)
-    .then(response => response.json())
-    .then(response => {
-      console.log(response);
-
-      if (response.errors) {
-        console.error("GraphQL Errors:", response.errors);
-        return;
-      } else {
-        if (response.data && response.data.getProof && response.data.getProof.proof && response.data.getProof.instances) {
-          write({
-            args: [response.data.getProof.proof, response.data.getProof.instances],
-          })
-          return;
+    const getProofOptions = {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        query: `
+          query($taskId: String!) {
+            getProof(id: $taskId) {
+              proof
+              instances
+              status
+            }
+          }`,
+        variables: {
+          taskId: taskId
         }
-      }
+      })
+    };
 
-      // Check if you've received the desired result (you can modify this condition)
-      if (!response.data.getProof) {
-        // If not received, wait for a bit (e.g., 5 seconds) and poll again
-        setTimeout(() => pollGetProof(taskId, attemptCount + 1), 5000);
-      }
-    })
-    .catch(err => console.error(err));
-}
+    fetch('https://hub-staging.ezkl.xyz/graphql', getProofOptions)
+      .then(response => response.json())
+      .then(response => {
+        console.log(response);
+
+        if (response.errors) {
+          console.error("GraphQL Errors:", response.errors);
+          return;
+        } else {
+          if (response.data && response.data.getProof && response.data.getProof.proof && response.data.getProof.instances) {
+            write({
+              args: [response.data.getProof.proof, response.data.getProof.instances],
+            })
+            return;
+          }
+        }
+
+        // Check if you've received the desired result (you can modify this condition)
+        if (response.data.getProof.status === "PENDING") {
+          // If not received, wait for a bit (e.g., 5 seconds) and poll again
+          setTimeout(() => pollGetProof(taskId, attemptCount + 1), 5000);
+        }
+      })
+      .catch(err => console.error(err));
+  }
 
 
   const moves = history.map((squares, move) => {
@@ -358,11 +365,11 @@ const pollGetProof = (taskId: string, attemptCount: number) => {
           <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
         </div>
       </div>
-      <div className="game-actions space-x-2">
-        <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition duration-300 ease-in-out" onClick={saveGameState}>Save Game</button>
-        <button className="bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300 ease-in-out" onClick={handleRestartGame}>Restart Game</button>
+      <div className="game-actions space-x-1">
+        <button className="bg-blue-500 text-white font-bold py-2 px-2 rounded hover:bg-blue-700 transition duration-300 ease-in-out" onClick={saveGameState}>Save Game</button>
+        <button className="bg-green-500 text-white font-bold py-2 px-2 rounded hover:bg-green-700 transition duration-300 ease-in-out" onClick={handleRestartGame}>Restart Game</button>
         {isGameCompleted && (
-          <button className="bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-red-700 transition duration-300 ease-in-out" onClick={handleSubmitGame}>Submit Game</button>
+          <button className="bg-red-500 text-white font-bold py-2 px-2 rounded hover:bg-red-700 transition duration-300 ease-in-out" onClick={handleSubmitGame}>Submit Game</button>
         )}
       </div>
       {/* <div className="game-info ml-4">
